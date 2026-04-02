@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gridient</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --gold: #c8a96e;
+      --gold-dim: rgba(200, 169, 110, 0.18);
+      --gold-mid: rgba(200, 169, 110, 0.45);
+      --white: #f0ece4;
+      --white-dim: rgba(240, 236, 228, 0.55);
+      --white-faint: rgba(240, 236, 228, 0.08);
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: var(--black);
+      color: var(--white);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── background image ── */
+    .bg {
+      position: fixed;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1800&q=80');
+      background-size: cover;
+      background-position: center 40%;
+      filter: brightness(0.28) saturate(0.6);
+      z-index: 0;
+    }
+
+    /* fine scanline overlay */
+    .bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.12) 3px,
+        rgba(0,0,0,0.12) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* ── thin gold horizontal line at top ── */
+    .top-line {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold) 70%, transparent 100%);
+      z-index: 10;
+      opacity: 0;
+      animation: fadeIn 1.2s ease 0.4s forwards;
+    }
+
+    /* ── layout ── */
+    .stage {
+      position: relative;
+      z-index: 2;
+      height: 100vh;
+      width: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 0 clamp(24px, 6vw, 80px);
+    }
+
+    /* ── header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 0;
+      opacity: 0;
+      transform: translateY(-10px);
+      animation: riseIn 0.9s ease 0.6s forwards;
+    }
+
+    .wordmark {
+      font-family: 'DM Mono', monospace;
+      font-weight: 400;
+      font-size: 13px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+
+    .wordmark span {
+      color: var(--gold);
+    }
+
+    .header-tag {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+      border: 1px solid rgba(200,169,110,0.25);
+      padding: 5px 12px;
+      border-radius: 2px;
+    }
+
+    /* ── centre ── */
+    .centre {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 0;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0;
+      animation: fadeIn 1s ease 1s forwards;
+      margin-bottom: 22px;
+    }
+
+    .headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(46px, 7.5vw, 102px);
+      line-height: 1.0;
+      letter-spacing: -0.01em;
+      color: var(--white);
+      opacity: 0;
+      animation: riseIn 1.1s ease 1.1s forwards;
+    }
+
+    .headline em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    /* animated gradient shimmer on headline */
+    .headline-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sub {
+      margin-top: 32px;
+      font-size: clamp(11px, 1.1vw, 13px);
+      letter-spacing: 0.14em;
+      line-height: 1.9;
+      color: var(--white-dim);
+      max-width: 480px;
+      opacity: 0;
+      animation: riseIn 1s ease 1.5s forwards;
+    }
+
+    /* ── divider ── */
+    .divider {
+      width: 48px;
+      height: 1px;
+      background: var(--gold-mid);
+      margin: 36px auto;
+      opacity: 0;
+      animation: widthIn 1s ease 1.8s forwards;
+    }
+
+    /* ── notify form ── */
+    .notify {
+      opacity: 0;
+      animation: riseIn 1s ease 2s forwards;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .notify-label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+    }
+
+    .notify-row {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--gold-mid);
+      border-radius: 2px;
+      overflow: hidden;
+      width: clamp(260px, 36vw, 400px);
+      background: rgba(10,10,10,0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    .notify-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 12px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--white);
+    }
+
+    .notify-row input::placeholder {
+      color: rgba(240,236,228,0.28);
+    }
+
+    .notify-row button {
+      background: var(--gold);
+      border: none;
+      padding: 12px 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--black);
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .notify-row button:hover {
+      background: #e0c08a;
+    }
+
+    /* ── footer ── */
+    footer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 0 28px;
+      opacity: 0;
+      animation: fadeIn 1s ease 2.4s forwards;
+    }
+
+    .footer-left {
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240,236,228,0.3);
+    }
+
+    .footer-right {
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: rgba(200,169,110,0.45);
+      text-align: right;
+      line-height: 1.8;
+    }
+
+    /* ── floating dot grid ── */
+    .dot-field {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .dot {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      background: var(--gold);
+      border-radius: 50%;
+      opacity: 0;
+      animation: pulse var(--dur, 4s) ease-in-out var(--delay, 0s) infinite;
+    }
+
+    /* ── corner brackets ── */
+    .corner {
+      position: fixed;
+      width: 22px;
+      height: 22px;
+      z-index: 3;
+      opacity: 0;
+      animation: fadeIn 1.2s ease 2.8s forwards;
+    }
+    .corner-tl { top: 14px; left: 14px; border-top: 1px solid var(--gold-mid); border-left: 1px solid var(--gold-mid); }
+    .corner-tr { top: 14px; right: 14px; border-top: 1px solid var(--gold-mid); border-right: 1px solid var(--gold-mid); }
+    .corner-bl { bottom: 14px; left: 14px; border-bottom: 1px solid var(--gold-mid); border-left: 1px solid var(--gold-mid); }
+    .corner-br { bottom: 14px; right: 14px; border-bottom: 1px solid var(--gold-mid); border-right: 1px solid var(--gold-mid); }
+
+    /* ── success message ── */
+    .success {
+      display: none;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── keyframes ── */
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes riseIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes widthIn {
+      from { width: 0; opacity: 0; }
+      to { width: 48px; opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(2); }
+    }
+
+    /* init transforms for riseIn targets */
+    .centre, .sub, .notify { transform: translateY(16px); }
+    header { /* uses its own transform above */ }
+  </style>
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="top-line"></div>
+
+  <!-- corner brackets -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- ambient dots -->
+  <div class="dot-field" id="dotField"></div>
+
+  <div class="stage">
+    <header>
+      <div class="wordmark">GRID<span>I</span>ENT</div>
+      <div class="header-tag">gridient.cloud</div>
+    </header>
+
+    <div class="centre">
+      <p class="eyebrow">Energy-Aware Compute Optimisation</p>
+      <div class="headline-wrap">
+        <h1 class="headline">Empowering Your<br><em>Data Journey</em></h1>
+      </div>
+      <p class="sub">
+        Workload optimisation for data centres in high-sun,<br>
+        power-constrained markets. Solar. Battery. Grid. Unified.
+      </p>
+      <div class="divider"></div>
+      <div class="notify">
+        <p class="notify-label">Request early access</p>
+        <div class="notify-row">
+          <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="off" />
+          <button onclick="handleSubmit()">Notify me</button>
+        </div>
+        <p class="success" id="successMsg">You are on the list.</p>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-left">
+        Africa &nbsp;&middot;&nbsp; Middle East &nbsp;&middot;&nbsp; India
+      </div>
+      <div class="footer-right">
+        Solar &nbsp;&middot;&nbsp; Battery &nbsp;&middot;&nbsp; Grid<br>
+        Carbon-aware scheduling
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // scatter ambient dots
+    const field = document.getElementById('dotField');
+    for (let i = 0; i < 38; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.style.left = Math.random() * 100 + '%';
+      d.style.top  = Math.random() * 100 + '%';
+      d.style.setProperty('--dur',   (3 + Math.random() * 5) + 's');
+      d.style.setProperty('--delay', (Math.random() * 6) + 's');
+      field.appendChild(d);
+    }
+
+    function handleSubmit() {
+      const input = document.getElementById('emailInput');
+      const msg   = document.getElementById('successMsg');
+      if (input.value && input.value.includes('@')) {
+        input.closest('.notify-row').style.display = 'none';
+        msg.style.display = 'block';
+      } else {
+        input.style.borderBottom = '1px solid rgba(200,169,110,0.7)';
+        input.focus();
+      }
+    }
+
+    document.getElementById('emailInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleSubmit();
+    });
+  </script>
+</body>
+</html>

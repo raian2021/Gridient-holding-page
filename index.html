@@ -11,51 +11,56 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --black: #0a0a0a;
+      --black: #070709;
       --gold: #c8a96e;
-      --gold-dim: rgba(200, 169, 110, 0.18);
       --gold-mid: rgba(200, 169, 110, 0.45);
       --white: #f0ece4;
       --white-dim: rgba(240, 236, 228, 0.55);
-      --white-faint: rgba(240, 236, 228, 0.08);
     }
 
     html, body {
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: var(--black);
+      background: #000;
       color: var(--white);
       font-family: 'DM Mono', monospace;
     }
 
-    /* ── background image ── */
-    .bg {
+    /* ── satellite pan background ── */
+    .earth-bg {
       position: fixed;
-      inset: 0;
-      background-image: url('datacenter.jpg');
-      background-size: cover;
-      background-position: center 40%;
-      filter: brightness(0.28) saturate(0.6);
+      inset: -20%;
       z-index: 0;
+      background-image: url('earth.jpg');
+      background-size: cover;
+      background-position: center center;
+      filter: brightness(0.55) saturate(0.85);
+      /* slow pan — moves across the image like a satellite pass */
+      animation: satpan 40s linear infinite alternate;
+      will-change: transform;
     }
 
-    /* fine scanline overlay */
-    .bg::after {
-      content: '';
-      position: absolute;
+    @keyframes satpan {
+      0%   { transform: translate(0%, 0%)     scale(1.25); }
+      25%  { transform: translate(-4%, 2%)    scale(1.28); }
+      50%  { transform: translate(-8%, -2%)   scale(1.25); }
+      75%  { transform: translate(-5%, 3%)    scale(1.27); }
+      100% { transform: translate(-10%, 1%)   scale(1.25); }
+    }
+
+    /* vignette */
+    .vignette {
+      position: fixed;
       inset: 0;
-      background-image: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(0,0,0,0.12) 3px,
-        rgba(0,0,0,0.12) 4px
-      );
+      z-index: 1;
+      background:
+        radial-gradient(ellipse at center, rgba(0,0,0,0.0) 30%, rgba(0,0,0,0.75) 100%),
+        linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.0) 30%, rgba(0,0,0,0.0) 70%, rgba(0,0,0,0.55) 100%);
       pointer-events: none;
     }
 
-    /* ── thin gold horizontal line at top ── */
+    /* top gold line */
     .top-line {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -66,7 +71,37 @@
       animation: fadeIn 1.2s ease 0.4s forwards;
     }
 
-    /* ── layout ── */
+    /* corner brackets */
+    .corner {
+      position: fixed;
+      width: 22px; height: 22px;
+      z-index: 10;
+      opacity: 0;
+      animation: fadeIn 1.2s ease 2.8s forwards;
+    }
+    .corner-tl { top: 14px; left: 14px;   border-top: 1px solid var(--gold-mid); border-left:  1px solid var(--gold-mid); }
+    .corner-tr { top: 14px; right: 14px;  border-top: 1px solid var(--gold-mid); border-right: 1px solid var(--gold-mid); }
+    .corner-bl { bottom: 14px; left: 14px;  border-bottom: 1px solid var(--gold-mid); border-left:  1px solid var(--gold-mid); }
+    .corner-br { bottom: 14px; right: 14px; border-bottom: 1px solid var(--gold-mid); border-right: 1px solid var(--gold-mid); }
+
+    /* HUD scan line — subtle moving horizontal line like satellite telemetry */
+    .scanline {
+      position: fixed;
+      left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200,169,110,0.15) 20%, rgba(200,169,110,0.3) 50%, rgba(200,169,110,0.15) 80%, transparent);
+      z-index: 3;
+      animation: scan 12s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0%   { top: -2px; opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { top: 100vh; opacity: 0; }
+    }
+
+    /* layout */
     .stage {
       position: relative;
       z-index: 2;
@@ -77,7 +112,6 @@
       padding: 0 clamp(24px, 6vw, 80px);
     }
 
-    /* ── header ── */
     header {
       display: flex;
       align-items: center;
@@ -89,17 +123,12 @@
     }
 
     .wordmark {
-      font-family: 'DM Mono', monospace;
-      font-weight: 400;
       font-size: 13px;
       letter-spacing: 0.32em;
       text-transform: uppercase;
       color: var(--white);
     }
-
-    .wordmark span {
-      color: var(--gold);
-    }
+    .wordmark span { color: var(--gold); }
 
     .header-tag {
       font-size: 10px;
@@ -111,14 +140,12 @@
       border-radius: 2px;
     }
 
-    /* ── centre ── */
     .centre {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      gap: 0;
     }
 
     .eyebrow {
@@ -136,22 +163,12 @@
       font-weight: 300;
       font-size: clamp(46px, 7.5vw, 102px);
       line-height: 1.0;
-      letter-spacing: -0.01em;
       color: var(--white);
       opacity: 0;
+      transform: translateY(16px);
       animation: riseIn 1.1s ease 1.1s forwards;
     }
-
-    .headline em {
-      font-style: italic;
-      color: var(--gold);
-    }
-
-    /* animated gradient shimmer on headline */
-    .headline-wrap {
-      position: relative;
-      overflow: hidden;
-    }
+    .headline em { font-style: italic; color: var(--gold); }
 
     .sub {
       margin-top: 32px;
@@ -161,12 +178,12 @@
       color: var(--white-dim);
       max-width: 480px;
       opacity: 0;
+      transform: translateY(16px);
       animation: riseIn 1s ease 1.5s forwards;
     }
 
-    /* ── divider ── */
     .divider {
-      width: 48px;
+      width: 0;
       height: 1px;
       background: var(--gold-mid);
       margin: 36px auto;
@@ -174,9 +191,9 @@
       animation: widthIn 1s ease 1.8s forwards;
     }
 
-    /* ── notify form ── */
     .notify {
       opacity: 0;
+      transform: translateY(16px);
       animation: riseIn 1s ease 2s forwards;
       display: flex;
       flex-direction: column;
@@ -193,13 +210,12 @@
 
     .notify-row {
       display: flex;
-      gap: 0;
       border: 1px solid var(--gold-mid);
       border-radius: 2px;
       overflow: hidden;
       width: clamp(260px, 36vw, 400px);
-      background: rgba(10,10,10,0.6);
-      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
     }
 
     .notify-row input {
@@ -213,10 +229,7 @@
       letter-spacing: 0.1em;
       color: var(--white);
     }
-
-    .notify-row input::placeholder {
-      color: rgba(240,236,228,0.28);
-    }
+    .notify-row input::placeholder { color: rgba(240,236,228,0.28); }
 
     .notify-row button {
       background: var(--gold);
@@ -226,17 +239,21 @@
       font-size: 9px;
       letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: var(--black);
+      color: #000;
       cursor: pointer;
       transition: background 0.2s;
       white-space: nowrap;
     }
+    .notify-row button:hover { background: #e0c08a; }
 
-    .notify-row button:hover {
-      background: #e0c08a;
+    .success {
+      display: none;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
     }
 
-    /* ── footer ── */
     footer {
       display: flex;
       align-items: flex-end;
@@ -261,82 +278,25 @@
       line-height: 1.8;
     }
 
-    /* ── floating dot grid ── */
-    .dot-field {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .dot {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      background: var(--gold);
-      border-radius: 50%;
-      opacity: 0;
-      animation: pulse var(--dur, 4s) ease-in-out var(--delay, 0s) infinite;
-    }
-
-    /* ── corner brackets ── */
-    .corner {
-      position: fixed;
-      width: 22px;
-      height: 22px;
-      z-index: 3;
-      opacity: 0;
-      animation: fadeIn 1.2s ease 2.8s forwards;
-    }
-    .corner-tl { top: 14px; left: 14px; border-top: 1px solid var(--gold-mid); border-left: 1px solid var(--gold-mid); }
-    .corner-tr { top: 14px; right: 14px; border-top: 1px solid var(--gold-mid); border-right: 1px solid var(--gold-mid); }
-    .corner-bl { bottom: 14px; left: 14px; border-bottom: 1px solid var(--gold-mid); border-left: 1px solid var(--gold-mid); }
-    .corner-br { bottom: 14px; right: 14px; border-bottom: 1px solid var(--gold-mid); border-right: 1px solid var(--gold-mid); }
-
-    /* ── success message ── */
-    .success {
-      display: none;
-      font-size: 10px;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--gold);
-    }
-
-    /* ── keyframes ── */
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
-    @keyframes riseIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes riseIn { to { opacity: 1; transform: translateY(0); } }
     @keyframes widthIn {
       from { width: 0; opacity: 0; }
-      to { width: 48px; opacity: 1; }
+      to   { width: 48px; opacity: 1; }
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 0; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(2); }
-    }
-
-    /* init transforms for riseIn targets */
-    .centre, .sub, .notify { transform: translateY(16px); }
-    header { /* uses its own transform above */ }
   </style>
 </head>
 <body>
 
-  <div class="bg"></div>
+  <div class="earth-bg"></div>
+  <div class="vignette"></div>
+  <div class="scanline"></div>
   <div class="top-line"></div>
 
-  <!-- corner brackets -->
   <div class="corner corner-tl"></div>
   <div class="corner corner-tr"></div>
   <div class="corner corner-bl"></div>
   <div class="corner corner-br"></div>
-
-  <!-- ambient dots -->
-  <div class="dot-field" id="dotField"></div>
 
   <div class="stage">
     <header>
@@ -346,9 +306,7 @@
 
     <div class="centre">
       <p class="eyebrow">Energy-Aware Compute Optimisation</p>
-      <div class="headline-wrap">
-        <h1 class="headline">Empowering Your<br><em>Data Journey</em></h1>
-      </div>
+      <h1 class="headline">Empowering Your<br><em>Data Journey</em></h1>
       <p class="sub">
         Workload optimisation for data centres in high-sun,<br>
         power-constrained markets. Solar. Battery. Grid. Unified.
@@ -365,9 +323,7 @@
     </div>
 
     <footer>
-      <div class="footer-left">
-        Africa &nbsp;&middot;&nbsp; Middle East &nbsp;&middot;&nbsp; India
-      </div>
+      <div class="footer-left">Africa &nbsp;&middot;&nbsp; Middle East &nbsp;&middot;&nbsp; India</div>
       <div class="footer-right">
         Solar &nbsp;&middot;&nbsp; Battery &nbsp;&middot;&nbsp; Grid<br>
         Carbon-aware scheduling
@@ -376,18 +332,6 @@
   </div>
 
   <script>
-    // scatter ambient dots
-    const field = document.getElementById('dotField');
-    for (let i = 0; i < 38; i++) {
-      const d = document.createElement('div');
-      d.className = 'dot';
-      d.style.left = Math.random() * 100 + '%';
-      d.style.top  = Math.random() * 100 + '%';
-      d.style.setProperty('--dur',   (3 + Math.random() * 5) + 's');
-      d.style.setProperty('--delay', (Math.random() * 6) + 's');
-      field.appendChild(d);
-    }
-
     function handleSubmit() {
       const input = document.getElementById('emailInput');
       const msg   = document.getElementById('successMsg');
@@ -395,12 +339,10 @@
         input.closest('.notify-row').style.display = 'none';
         msg.style.display = 'block';
       } else {
-        input.style.borderBottom = '1px solid rgba(200,169,110,0.7)';
         input.focus();
       }
     }
-
-    document.getElementById('emailInput').addEventListener('keydown', function(e) {
+    document.getElementById('emailInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleSubmit();
     });
   </script>
